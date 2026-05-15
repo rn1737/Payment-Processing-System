@@ -1,35 +1,56 @@
-# PayFlow Backend Project - TODO
+# PayFlow TODO (execution checklist)
 
-## Progress
-- [x] Project root: `/Users/riteshranka/Desktop/PayFlow`
-- [x] Parent multi-module structure created under `PayFlow/payflow-parent`
-- [x] Maven wrapper files added (mvnw, mvnw.cmd, wrapper properties)
-- [x] Accidental placeholder file removed
-- [x] README + architecture docs created (`docs/`)
-- [x] Docker Compose + placeholder Dockerfiles scaffolded
-- [x] Common module created + shared idempotency value object scaffolded
-- [x] Per-service Maven module `pom.xml`s scaffolded
+## Phase 1 — Build baseline (Maven + modules)
+- [ ] Verify/extend `PayFlow/payflow-parent/pom.xml` for complete dependency/plugin management.
+- [ ] Audit each service `pom.xml` for missing enterprise dependencies (Actuator, validation, security, Jackson, retry).
+- [ ] Ensure all modules build with Java 17.
 
-## Remaining (core implementation)
-- [ ] Add full parent/build config (dependency BOM, plugin mgmt, compiler/source settings) (partially present; verify completeness)
-- [ ] Create `common` module utilities (DTOs, exceptions, Kafka event envelope, idempotency contracts, security shared utils)
+## Phase 2 — Add missing platform services
+- [ ] Add `discovery-server` module (Eureka server).
+- [ ] Add `config-server` module (Spring Cloud Config).
+- [ ] Wire each microservice to Eureka + Config.
+- [ ] Update `PayFlow/docker-compose.yml` to include the new servers.
 
-- [ ] Implement each microservice skeleton:
-  - [ ] api-gateway (routes + rate limiting)
-  - [ ] auth-service (JWT issuance + RBAC)
-  - [ ] wallet-service (accounts + balances + redis cache)
-  - [ ] payment-service (fraud rules + daily limits + publish events)
-  - [ ] transaction-service (state machine + postgres + idempotency)
-  - [ ] notification-service (consume + notify)
-- [ ] Add real (non-placeholder) service Dockerfiles/entrypoints
-- [ ] Add CI workflow `.github/workflows/ci.yml`
-- [ ] Add Swagger/OpenAPI configuration per service
-- [ ] Add centralized exception handling + validation
-- [ ] Add DLQ + retry config for Kafka consumers
-- [ ] Add distributed tracing/logging scaffolding (logs + correlation id)
-- [ ] Add API flow diagrams + Kafka event flow + interview explanation docs (already scaffolded under docs/)
+## Phase 3 — Implement shared `common` module
+- [ ] Add API response standardization (ApiResponse + error model).
+- [ ] Add base/global exception handling helpers.
+- [ ] Add Kafka event envelope + DTO mapping helpers.
+- [ ] Implement Redis-backed idempotency repository/util.
+- [ ] Add JWT utility shared code.
 
-## Run/Validation Notes
-- Local build/run requires Java 17 runtime (currently missing in this environment).
-- After code generation, builds will validate in CI and via Docker.
+## Phase 4 — Implement microservices code
+- [ ] api-gateway: Spring Cloud Gateway routes, JWT validation, rate limiting, correlation id.
+- [ ] auth-service: register/login JWT issuance, RBAC, user profile APIs.
+- [ ] wallet-service: account + balance adjustments with idempotency, publishes `wallets.updated`.
+- [ ] payment-service: validate + publish `payments.transfer.initiated`, status workflow.
+- [ ] transaction-service: persistence + idempotency + state machine, publishes status updates.
+- [ ] notification-service: consumes status events, async notifications.
+
+## Phase 5 — Kafka reliability
+- [ ] Configure Kafka topic names + DLQ topics.
+- [ ] Add consumer retries with backoff + DLQ publishing.
+- [ ] Implement event dedupe/idempotency for consumers.
+
+## Phase 6 — Docker hardening
+- [ ] Replace placeholder Dockerfiles with multi-stage Maven build + `java -jar` runtime.
+- [ ] Ensure all service containers expose correct ports and start commands.
+
+## Phase 7 — Observability
+- [ ] Structured logging with correlation id across services.
+- [ ] Actuator health endpoints per service.
+- [ ] Optional: centralized logging stack (Loki/ELK) if desired.
+
+## Phase 8 — Swagger + docs + test data
+- [ ] Swagger/OpenAPI configuration for each service.
+- [ ] Update `PayFlow/README.md` with endpoints + API flow + Kafka workflow.
+- [ ] Add sample test data (curl commands) for JWT + payment initiation.
+
+## Phase 9 — CI/CD
+- [ ] Add GitHub Actions workflow (build/test + docker build).
+- [ ] (Optional) Add Jenkinsfile alternative.
+
+## Validation
+- [ ] `docker compose up --build` succeeds.
+- [ ] Swagger endpoints reachable through gateway.
+- [ ] End-to-end payment event flow works (initiate → events → transaction → notification).
 
